@@ -7,14 +7,14 @@ public class LowSpeedModeCommand extends Command {
 
 
     public LowSpeedModeCommand() {
-        requires(Robot.gearShift);
+        requires(Robot.Get().gearShift);
     }
     @Override
     protected void initialize() {
         // switches the gears from high speed to low speed
         // or turns the gears on and goes to low speed mode
         System.out.println("Entering low speed mode");
-        Robot.gearShift.lowSpeedMode();
+        Robot.Get().gearShift.lowSpeedMode();
         //only uses initialize because the gear only shifts once
     }
 

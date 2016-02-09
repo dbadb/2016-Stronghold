@@ -1,13 +1,13 @@
 package org.usfirst.frc.team4915.stronghold.subsystems;
 
 import edu.wpi.first.wpilibj.CANTalon;
+import edu.wpi.first.wpilibj.CANTalon.FeedbackDevice;
 import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.command.Subsystem;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import org.usfirst.frc.team4915.stronghold.Robot;
 import org.usfirst.frc.team4915.stronghold.RobotMap;
 import org.usfirst.frc.team4915.stronghold.commands.IntakeLauncher.SetLauncherHeightCommand;
 
@@ -29,27 +29,59 @@ public class IntakeLauncher extends Subsystem {
 
     private boolean autoAim = false;
 
-    public Joystick aimStick = Robot.oi.getJoystickAimStick();
+    public Joystick aimStick;
 
     // left and right are determined when standing behind the robot
 
     // These motors control flywheels that collect and shoot the ball
-    public CANTalon intakeLeftMotor = RobotMap.intakeLeftMotor;
-    public CANTalon intakeRightMotor = RobotMap.intakeRightMotor;
+    public CANTalon intakeLeftMotor;
+    public CANTalon intakeRightMotor;
 
     // This motor adjusts the angle of the launcher for shooting
-    public CANTalon aimMotor = RobotMap.aimMotor;
+    public CANTalon aimMotor;
 
     // limitswitch in the back of the basket that tells the robot when the
     // boulder is secure
-    public DigitalInput boulderSwitch = RobotMap.boulderSwitch;
+    public DigitalInput boulderSwitch;
 
     // limitswitches that tell when the launcher is at the maximum or minumum
     // height
-    public DigitalInput launcherBottomSwitch = RobotMap.launcherBottomSwitch;
-    public DigitalInput launcherTopSwitch = RobotMap.launcherTopSwitch;
+    public DigitalInput launcherBottomSwitch;
+    public DigitalInput launcherTopSwitch;
 
-    public Servo launcherServo = RobotMap.launcherServo;
+    public Servo launcherServo;
+    
+    /* FIXME: to delete as the encoder connect directly to Talon */
+    public Encoder aimEncoder;
+    
+    public IntakeLauncher(Joystick aimStick) {
+        this.intakeLeftMotor = new CANTalon(RobotMap.INTAKE_LEFT_MOTOR_PORT);
+        this.intakeRightMotor = new CANTalon(RobotMap.INTAKE_RIGHT_MOTOR_PORT);
+        this.aimMotor = new CANTalon(RobotMap.AIM_MOTOR_PORT);
+        this.launcherServo = new Servo(RobotMap.LAUNCHER_SERVO_PORT);
+        // TODO: Initialize intakelauncher motors here, such as limit switches and encoders
+        
+        /* FIXME: to delete as the switches connect directly to Talon */
+        this.boulderSwitch = new DigitalInput(RobotMap.BOULDER_SWITCH_PORT);
+        this.launcherTopSwitch = new DigitalInput(RobotMap.LAUNCHER_TOP_SWITCH_PORT);
+        this.launcherBottomSwitch = new DigitalInput(RobotMap.LAUNCHER_BOTTOM_SWITCH_PORT);
+
+        /* FIXME: to delete as the encoder connect directly to Talon */
+        this.aimEncoder = new Encoder(RobotMap.LAUNCHER_BOTTOM_SWITCH_PORT, 
+        							  RobotMap.LAUNCHER_TOP_SWITCH_PORT, 
+        							  false, Encoder.EncodingType.k4X);
+        
+        // setup the motor
+        this.aimMotor.setFeedbackDevice(FeedbackDevice.QuadEncoder);
+        this.aimMotor.setForwardSoftLimit(RobotMap.AIM_MOTOR_FORWARD_SOFT_LIMIT);
+        this.aimMotor.setReverseSoftLimit(RobotMap.AIM_MOTOR_REVERSE_SOFT_LIMIT);
+        this.aimMotor.enableForwardSoftLimit(true);
+        this.aimMotor.enableReverseSoftLimit(true);
+        this.aimMotor.ConfigFwdLimitSwitchNormallyOpen(true);
+        this.aimMotor.ConfigRevLimitSwitchNormallyOpen(true);
+        
+        this.aimStick = aimStick;
+    }
 
     @Override
     protected void initDefaultCommand() {

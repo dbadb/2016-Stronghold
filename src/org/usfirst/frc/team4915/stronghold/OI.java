@@ -1,5 +1,4 @@
 package org.usfirst.frc.team4915.stronghold;
-import org.usfirst.frc.team4915.stronghold.vision.robot.VisionState;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,8 +8,8 @@ import java.util.jar.Manifest;
 import org.usfirst.frc.team4915.stronghold.commands.IntakeLauncher.IncrementLauncherHeightCommand;
 import org.usfirst.frc.team4915.stronghold.commands.IntakeLauncher.IntakeBallCommandGroup;
 import org.usfirst.frc.team4915.stronghold.commands.IntakeLauncher.LaunchBallCommandGroup;
-import org.usfirst.frc.team4915.stronghold.vision.robot.AutoAimControlCommand;
 import org.usfirst.frc.team4915.stronghold.vision.robot.VisionState;
+import org.usfirst.frc.team4915.stronghold.vision.robot.AutoAimControlCommand;
 
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.buttons.JoystickButton;
@@ -24,13 +23,9 @@ import org.usfirst.frc.team4915.stronghold.commands.LowSpeedModeCommand;
  */
 public class OI {
     // create  joysticks for driving and aiming the launcher
-    public Joystick driveStick;
-    public Joystick aimStick;
     public static final int DRIVE_STICK_PORT = 0;
 
     // Drive train two speed controls
-    public JoystickButton speedUpButton;
-    public JoystickButton slowDownButton;
     
     public static final int HIGH_SPEED_DRIVE_BUTTON= 4;
     public static final int LOW_SPEED_DRIVE_BUTTON= 3;
@@ -50,7 +45,11 @@ public class OI {
     public static final int UP_DIRECTION = 1;
     public static final int DOWN_DIRECTION = UP_DIRECTION * -1;
 
-    // creates new buttons
+    // Two Joysticks.
+    public Joystick driveStick;
+    public Joystick aimStick;
+ 
+    // Joystick buttons..
     // launchBall triggers a command group with commands that ultimately will
     // shoot the ball
     // grabBall triggers a command group with commands that will get the ball
@@ -60,44 +59,44 @@ public class OI {
     public JoystickButton autoAimButton;
     public JoystickButton launcherUpButton;
     public JoystickButton launcherDownButton;
+    public JoystickButton speedUpButton;
+    public JoystickButton slowDownButton;
 
+    // Important note:
+    //	currently, the OI object is constructed by the Robot as part of its constructor.
+    //  Thus, Robot isn't fully initialized at this point.  Commands access the associated
+    //  subsystems or modules by invoking  Robot.Get() in their constructors. No calls
+    //  to Robot.Get() should appear in this file.
     public OI() {
+        // DriveTrain-related buttons and commands ------------------------------------
         this.driveStick = new Joystick(DRIVE_STICK_PORT);
+
+        this.speedUpButton = new JoystickButton(this.driveStick, HIGH_SPEED_DRIVE_BUTTON);
+        this.speedUpButton.whenPressed(new HighSpeedModeCommand());
+
+        this.slowDownButton = new JoystickButton(driveStick, LOW_SPEED_DRIVE_BUTTON);
+        this.slowDownButton.whenPressed(new LowSpeedModeCommand());
+        
+        // IntakeLauncher-related controls ---------------------------------------------
         this.aimStick = new Joystick(LAUNCHER_STICK_PORT);
         
-        // Bind module commands to buttons
-        if (ModuleManager.DRIVE_MODULE_ON) {
-            this.speedUpButton = new JoystickButton(driveStick, HIGH_SPEED_DRIVE_BUTTON);
-            this.slowDownButton = new JoystickButton(driveStick, LOW_SPEED_DRIVE_BUTTON);
-
-            this.speedUpButton.whenPressed(new HighSpeedModeCommand());
-            this.slowDownButton.whenPressed(new LowSpeedModeCommand());
-            
-            SmartDashboard.putData("High speed mode- extending pneumatic", new HighSpeedModeCommand());
-            SmartDashboard.putData("Low speed mode- detracting pneumatic", new LowSpeedModeCommand());
-            
-            System.out.println("ModuleManager OI initialized: TODO DriveTrain");    // TODO: OI init DriveTrain
-        }
+        this.grabBallButton = new JoystickButton(this.aimStick, INTAKE_BALL_BUTTON_NUMBER);
+        this.grabBallButton.whenPressed(new IntakeBallCommandGroup());
         
-        if (ModuleManager.INTAKELAUNCHER_MODULE_ON) {
-            this.grabBallButton = new JoystickButton(this.aimStick, INTAKE_BALL_BUTTON_NUMBER);
-            this.launchBallButton = new JoystickButton(this.aimStick, LAUNCH_BALL_BUTTON_NUMBER);
+        this.launchBallButton = new JoystickButton(this.aimStick, LAUNCH_BALL_BUTTON_NUMBER);
+        this.launchBallButton.whenPressed(new LaunchBallCommandGroup());
 
-            this.grabBallButton.whenPressed(new IntakeBallCommandGroup());
-            this.launchBallButton.whenPressed(new LaunchBallCommandGroup());
-            System.out.println("ModuleManager initialized: IntakeLauncher");
-        }
-        
-        if (ModuleManager.GYRO_MODULE_ON) {
-            System.out.println("ModuleManager OI TODO: Initialize Gyro!");          // TODO: OI init Gyro
-        }
+        this.launcherUpButton = new JoystickButton(this.aimStick, LAUNCHER_UP_BUTTON_NUMBER);
+        this.launcherUpButton.whenPressed(new IncrementLauncherHeightCommand(UP_DIRECTION));
 
-        if (ModuleManager.VISION_MODULE_ON) {
-            SmartDashboard.putData(VisionState.getInstance());
-            this.autoAimButton = new JoystickButton(this.aimStick, AUTO_AIM_BUTTON_NUMBER);
-            this.autoAimButton.whenPressed(new AutoAimControlCommand());
-            System.out.println("ModuleManager initialized: Vision");
-        }
+        this.launcherDownButton = new JoystickButton(this.aimStick, LAUNCHER_DOWN_BUTTON_NUMBER);
+        this.launcherDownButton.whenPressed(new IncrementLauncherHeightCommand(DOWN_DIRECTION));
+
+        // Vision-related buttons and commands -------------------------------------------
+        SmartDashboard.putData(VisionState.getInstance());
+        this.autoAimButton = new JoystickButton(this.aimStick, AUTO_AIM_BUTTON_NUMBER);
+        this.autoAimButton.whenPressed(new AutoAimControlCommand());
+        System.out.println("ModuleManager initialized: Vision");
         
         /* 
          * VERSION STRING!! 
@@ -118,27 +117,5 @@ public class OI {
             e.printStackTrace();
         }
 
-        // FIXME: move these to ModuleManager.INTAKELAUNCHER_MODULE_ON section above
-        this.aimStick = new Joystick(LAUNCHER_STICK_PORT);
-        this.grabBallButton = new JoystickButton(this.aimStick, INTAKE_BALL_BUTTON_NUMBER);
-        this.launchBallButton = new JoystickButton(this.aimStick, LAUNCH_BALL_BUTTON_NUMBER);
-        this.autoAimButton = new JoystickButton(this.aimStick, AUTO_AIM_BUTTON_NUMBER);
-        this.launcherUpButton = new JoystickButton(this.aimStick, LAUNCHER_UP_BUTTON_NUMBER);
-        this.launcherDownButton = new JoystickButton(this.aimStick, LAUNCHER_DOWN_BUTTON_NUMBER);
-
-        // binds commands to buttons, autoAim is commented for now because we
-        // don't know what the position will be
-        this.grabBallButton.whenPressed(new IntakeBallCommandGroup());
-        this.launchBallButton.whenPressed(new LaunchBallCommandGroup());
-        this.launcherUpButton.whenPressed(new IncrementLauncherHeightCommand(UP_DIRECTION));
-        this.launcherDownButton.whenPressed(new IncrementLauncherHeightCommand(DOWN_DIRECTION));
-    }
-
-    public Joystick getJoystickDrive() {
-        return this.driveStick;
-    }
-    
-    public Joystick getJoystickAimStick() {
-        return this.aimStick;
     }
 }

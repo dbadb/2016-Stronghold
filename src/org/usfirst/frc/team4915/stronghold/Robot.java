@@ -2,6 +2,7 @@
 package org.usfirst.frc.team4915.stronghold;
 
 import edu.wpi.first.wpilibj.IterativeRobot;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -11,6 +12,8 @@ import org.usfirst.frc.team4915.stronghold.subsystems.DriveTrain;
 import org.usfirst.frc.team4915.stronghold.subsystems.GearShift;
 import org.usfirst.frc.team4915.stronghold.subsystems.IntakeLauncher;
 
+import java.util.Arrays;
+
 /**
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the IterativeRobot
@@ -19,38 +22,56 @@ import org.usfirst.frc.team4915.stronghold.subsystems.IntakeLauncher;
  * directory.
  */
 public class Robot extends IterativeRobot {
+	
+	// Get is shorthand/alias for getInstance()
+	public static Robot Get() {
+		return getInstance();
+	}
 
-    public static DriveTrain driveTrain;
-    public static IntakeLauncher intakeLauncher;
-    public static OI oi;
-    public static GearShift gearShift;
-    Command autonomousCommand;
+	public synchronized static Robot getInstance() {
+		if (s_instance == null)
+			s_instance = new Robot();
+		return s_instance;
+	}
 
+	private static Robot s_instance;
+	
+    public DriveTrain driveTrain;
+    public IntakeLauncher intakeLauncher;
+    public OI oi;
+    public GearShift gearShift;
+    public Command autonomousCommand;
+    
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
     @Override
-    public void robotInit() {
-        RobotMap.init();        // 1. Initialize RobotMap prior to initializing modules
-        
+    public void robotInit() {    	
+    	// 1. initialize operator interface... subsystems want access to Joystick,
+    	try {
+    		this.oi = new OI();
+            this.reportInitSuccess("OI");
+    	}
+    	catch(Throwable t) {
+        	this.reportInitFailure("OI", t);
+    	}
         // 2. conditionally create the modules
-        if (ModuleManager.DRIVE_MODULE_ON) {
-            driveTrain = new DriveTrain();
-            gearShift= new GearShift();
-            System.out.println("ModuleManager initialized: DriveTrain");
+        try  {
+            this.driveTrain = new DriveTrain(this.oi.driveStick);
+            this.gearShift = new GearShift();
+            this.reportInitSuccess("DriveTrain");
         }
-        if (ModuleManager.INTAKELAUNCHER_MODULE_ON) {
-            intakeLauncher = new IntakeLauncher();
-            SmartDashboard.putString("Module Manager", "IntakeLauncher Initialized");
-            System.out.println("ModuleManager initialized: IntakeLauncher");
+        catch (Throwable t) {
+        	this.reportInitFailure("DriveTrain", t);
         }
-        if (ModuleManager.GYRO_MODULE_ON) {
-            SmartDashboard.putString("Module Manager", "FIX GYRO INITIALIZATION!");
-            System.out.println("ModuleManager TODO: Initialize Gyro!");  
+        try {
+            this.intakeLauncher = new IntakeLauncher(this.oi.aimStick);
+            this.reportInitSuccess("IntakeLauncher");
         }
-
-        oi = new OI();      // 3. Construct OI after subsystems created
+        catch (Throwable t) {
+        	this.reportInitFailure("IntakeLauncher", t);
+        }
     }
 
     @Override
@@ -110,4 +131,18 @@ public class Robot extends IterativeRobot {
     public void testPeriodic() {
         LiveWindow.run();
     }
+    
+    private void reportInitSuccess(String subsystem) {
+        SmartDashboard.putString(subsystem, "Initialized");
+        System.out.println(subsystem + ": Initialized");
+    }
+    
+    private void reportInitFailure(String subsystem, Throwable t) {
+    	SmartDashboard.putString(subsystem, "BORKED");
+    	DriverStation.reportError(subsystem +
+                "Init ERROR - unhandled exception: " + t.toString() + " at "
+                    + Arrays.toString(t.getStackTrace()), false); 
+
+    }
+
 }

@@ -3,24 +3,29 @@ package org.usfirst.frc.team4915.stronghold.commands.IntakeLauncher;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.usfirst.frc.team4915.stronghold.Robot;
+import org.usfirst.frc.team4915.stronghold.subsystems.IntakeLauncher;
+
 
 public class SpinLaunchWheelsOutCommand extends Command {
 
     // this command spins the launch wheels outwards so they will launch the
     // ball
+	private IntakeLauncher intake;
     public SpinLaunchWheelsOutCommand() {
-        requires(Robot.intakeLauncher);
+    	this.intake = Robot.Get().intakeLauncher; 
+        requires(this.intake);
     }
 
     @Override
     protected void initialize() {
-        Robot.intakeLauncher.setSpeedLaunch();
+        this.intake.setSpeedLaunch();
     }
 
     @Override
     protected void execute() {
-        SmartDashboard.putString("Intake Flywheels", "Right: " + Double.toString(Robot.intakeLauncher.getIntakeRightMotor().getSpeed()) + " Left: "
-                + Double.toString(Robot.intakeLauncher.getIntakeLeftMotor().getSpeed()));
+        SmartDashboard.putString("Intake Flywheels", 
+        			"Right: " + Double.toString(this.intake.getIntakeRightMotor().getSpeed()) + 
+        			" Left: " + Double.toString(this.intake.getIntakeLeftMotor().getSpeed()));
     }
 
     @Override

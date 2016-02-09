@@ -10,9 +10,9 @@ import java.util.List;
 
 public class MoveStraightPositionModeCommand extends Command {
 
-    public static List<CANTalon> motors = Robot.driveTrain.motors;
+    public static List<CANTalon> motors = Robot.Get().driveTrain.motors;
     public double inputDistanceInches;
-    private DriveTrain driveTrain = Robot.driveTrain;
+    private DriveTrain driveTrain = Robot.Get().driveTrain;
     private List<Double> desiredTicksValue;
     private double driveStraightValue = 0.7;
 

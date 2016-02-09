@@ -9,7 +9,7 @@ public class SetLauncherHeightCommand extends Command {
 
     // this command sets the angle of the launcher
     public SetLauncherHeightCommand(double speed) {
-        requires(Robot.intakeLauncher);
+        requires(Robot.Get().intakeLauncher);
         this.speed = speed;
     }
 
@@ -20,7 +20,7 @@ public class SetLauncherHeightCommand extends Command {
 
     @Override
     protected void execute() {
-        Robot.intakeLauncher.moveLauncherWithJoystick(speed);
+        Robot.Get().intakeLauncher.moveLauncherWithJoystick(speed);
     }
 
     @Override

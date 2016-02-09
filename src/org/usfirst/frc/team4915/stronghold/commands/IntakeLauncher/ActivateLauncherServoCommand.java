@@ -6,11 +6,11 @@ import org.usfirst.frc.team4915.stronghold.Robot;
 public class ActivateLauncherServoCommand extends Command {
 
     public ActivateLauncherServoCommand() {
-        requires(Robot.intakeLauncher);
+        requires(Robot.Get().intakeLauncher);
     }
 
     protected void initialize() {
-        Robot.intakeLauncher.activateLaunchServo();
+        Robot.Get().intakeLauncher.activateLaunchServo();
     }
 
     protected void execute() {

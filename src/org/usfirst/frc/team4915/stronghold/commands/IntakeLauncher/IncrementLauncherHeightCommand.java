@@ -8,12 +8,12 @@ public class IncrementLauncherHeightCommand extends Command {
     private int direction;
 
     public IncrementLauncherHeightCommand(int direction) {
-        requires(Robot.intakeLauncher);
+        requires(Robot.Get().intakeLauncher);
         this.direction = direction;
     }
 
     protected void initialize() {
-        Robot.intakeLauncher.incrementLauncherHeight(direction);
+        Robot.Get().intakeLauncher.incrementLauncherHeight(direction);
     }
 
     protected void execute() {

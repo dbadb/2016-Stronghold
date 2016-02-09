@@ -10,7 +10,7 @@ public class WaitCommand extends Command {
 
     // this command waits for a number of milliseconds
     public WaitCommand(double waitTime) {
-        requires(Robot.intakeLauncher);
+        requires(Robot.Get().intakeLauncher);
         this.waitTime = waitTime;
         startTime = System.currentTimeMillis();
     }
