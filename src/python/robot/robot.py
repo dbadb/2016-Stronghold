@@ -1,5 +1,10 @@
 
+from wpilib import IterativeRobot
+from wpilib import DigitalOutput
 import wpilib
+from wpilib.command import Scheduler
+from wpilib import LiveWindow
+
 import logging
 
 from oi import OI
@@ -7,43 +12,78 @@ from robotMap import RobotMap
 from subsystems.driveTrain import DriveTrain
 from subsystems.intakeLauncher import IntakeLauncher
 from subsystems.portcullis import Portcullis
+from commands.autonomous import AutonomousCmd1
+from visionState import VisionState
 
-class AresRobot(wpilib.IterativeRobot):
-
+class AresRobot(IterativeRobot):
+    def __init__(self):
+        super().__init__()
+    # IterativeRobot methods
     def robotInit(self):
         # first make logging available (this is instantiated in robotbase)
-        self.logger = logging.getLogger('robotpy')
+        self.logger = logging.getLogger('AresRobot')
 
         # next initialize our RobotMap (defined by wiring)
         self.map = RobotMap()
 
+        # next create standalone objects
+        self.visionState = VisionState(self)
+        self.lastTime = 0
+        self.autonomousCommand = None
+
         # next initialize subsystems
+        self.debug("init drivetrain")
         self.driveTrain = DriveTrain(self)
+        self.debug("init portcullis")
         self.portcullis = Portcullis(self)
+        self.debug("init intake")
         self.intakeLauncher = IntakeLauncher(self)
+        self.photonicCannon = DigitalOutput(self.map.k_VsPhotonicCannon)
 
         # last, initialize operator interface
+        self.debug("init OI")
         self.oi = OI(self)
+        self.debug("init done")
 
     def autonomousInit(self):
-        pass
+        self.info("autonomousInit")
+        self.autonomousCommand = AutonomousCmd1(self)
+        self.autonomousCommand.start()
 
     def autonomousPeriodic(self):
-        pass
+        Scheduler.getInstance().run()
+        self.updateDashboard()
 
     def teleopInit(self):
-        pass
+        self.info("teleopInit")
+        if self.autonomousCommand:
+            self.autonomousCommand.cancel();
+            self.autonomousCommand = None
+        # we used aimMotor.enableControl here... it should be intrinsic
+        # in the running of the default command...
 
     def teleopPeriodic(self):
-        pass
+        Scheduler.getInstance().run()
+        self.updateDashboard()
 
     def testInit(self):
-        pass
+        self.info("testInit")
 
     def testPeriodic(self):
-        pass
+        LiveWindow.run()
+        self.updateDashboard()
+
+    def disabledInit(self):
+        self.info("disabledInit")
+
+    def disabledPeriodic(self):
+        Scheduler.getInstance().run()
+        self.updateDashboard()
 
     # logging methods ----------------------------------------
+    def debug(self, msg):
+        self.logger.debug(msg)
+
     def info(self, msg):
         self.logger.info(msg)
 
@@ -52,6 +92,18 @@ class AresRobot(wpilib.IterativeRobot):
 
     def error(self, msg):
         self.logger.error(msg)
+
+    # niscelleany ----------------------------------------------
+    def setLight(self, state):
+        self.photonicCannon.set(state)
+
+    def updateDashboard(self):
+        currentTime = wpilib.Timer.getFPGATimestamp()
+        if currentTime - self.lastTime > 1.0:
+            self.lastTime = currentTime
+            self.driveTrain.updateDashboard()
+            self.intakeLauncher.updateDashboard()
+            self.portcullis.updateDashboard()
 
 if __name__ == "__main__":
     wpilib.run(AresRobot)

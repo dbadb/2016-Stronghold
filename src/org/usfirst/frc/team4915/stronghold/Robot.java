@@ -108,10 +108,10 @@ public class Robot extends IterativeRobot {
     	Autonomous.Strat astrat = (Autonomous.Strat) oi.strategy.getSelected();
     	Autonomous.Position apos = (Autonomous.Position) oi.startingFieldPosition.getSelected();
     	if(useGP) {
-    		autonomousCommand = new AutoCommand1GP(atype, astrat, apos); 
+    		autonomousCommand = new AutoCommand1GP(atype, astrat, apos);
     	} else {
     		System.out.println("Constructing AutoCommand1");
-    	    autonomousCommand = new AutoCommand1(atype, astrat, apos); 
+    	    autonomousCommand = new AutoCommand1(atype, astrat, apos);
     	}
         if (this.autonomousCommand != null) {
             this.autonomousCommand.start();
@@ -208,7 +208,7 @@ public class Robot extends IterativeRobot {
 	        SmartDashboard.putString("Goal: ", intakeLauncher.getDesiredWheelSpeed());
         }
 	}
-	
+
 	public void updateDrivetrainStatus() {
         if (ModuleManager.DRIVE_MODULE_ON) {
 

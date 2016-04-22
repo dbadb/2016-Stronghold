@@ -1,10 +1,10 @@
 from wpilib.command import Command
-from wpilib import Joystick
-from visionstate import VisionState
 
 class JoystickDriver(Command):
-
+    """JoystickDriver is the default command for the driveTrain.
+    """
     def __init__(self, robot):
+        super().__init__()
         self.robot = robot
         self.driveStick = robot.oi.driveStick
         self.driveTrain = robot.driveTrain
@@ -17,8 +17,7 @@ class JoystickDriver(Command):
 
     # execute: called repeatedly when this Command is scheduled to run
     def execute(self):
-        vs = VisionState.getInstance()
-        if vs.wantsControl:
+        if self.robot.visionState.wantsControl():
             self.driveTrain.endAutoTurn()
             self.driveTrain.trackVision()
         else:
@@ -50,6 +49,7 @@ class JoystickDriveStraight(Command):
         bound to a whilePressed joystick button.
     """
     def __init__(self, robot):
+        super().__init__()
         self.robot = robot
         self.driveTrain = robot.driveTrain
         self.requires(self.driveTrain)
@@ -83,8 +83,11 @@ class JoystickDriveStraight(Command):
         self.robot.end()
 
 class AutoDriveStraight(Command):
+    """AutoDriveStraight is the primary means of driving during autonomous.
+    """
     k_maxRetries = 100 # number of executes to wait 'til encoder resets
     def __init__(self, robot, distanceInInches, speed):
+        super().__init__()
         self.robot = robot
         self.driveTrain = robot.driveTrain
         self.intakeLauncher = robot.intakeLauncer

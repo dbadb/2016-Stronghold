@@ -96,8 +96,8 @@ class BNO055(GyroBase):
     def resetHeading(self, heading=math.pi):
         self.offset = self.getRawHeading() - heading
 
-    def execute(self):
-        pass  # Keep MagicBot happy!
+    def getCalibration(self):
+        return 0 # TODO: implementme!
 
     """ I2C addresses, register addresses, and
     values to set registers to for the BNO055"""
@@ -287,5 +287,3 @@ class BNO055(GyroBase):
     ACCEL_RADIUS_MSB_ADDR = 0X68
     MAG_RADIUS_LSB_ADDR = 0X69
     MAG_RADIUS_MSB_ADDR = 0X6A
-
-

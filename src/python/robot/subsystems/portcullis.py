@@ -1,5 +1,6 @@
 from wpilib.command import Subsystem
 from wpilib import CANTalon
+from wpilib import SmartDashboard
 
 s_pctPowerUp = .8
 s_pctPowerDown = -.6
@@ -36,6 +37,16 @@ class Portcullis(Subsystem):
     def initDefaultCommand(self):
         # currently we don't have a default command
         pass
+
+    def updateDashboard(self):
+        SmartDashboard.putBoolean("Portcullis Upper Right Limit Switch",
+                                 self.rightAtTop())
+        SmartDashboard.putBoolean("Portcullis Upper Left Limit Switch",
+                                 self.leftAtTop())
+        SmartDashboard.putBoolean("Portcullis Lower Right Limit Switch",
+                                 self.rightAtBottom())
+        SmartDashboard.putBoolean("Portcullis Lower Left Limit Switch",
+                                 self.leftAtBottom())
 
     def leftAtTop(self):
         return self.leftMotor.isFwdLimitSwitchClosed()

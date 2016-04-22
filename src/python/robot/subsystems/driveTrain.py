@@ -3,9 +3,13 @@ from wpilib.command import Subsystem
 from wpilib import RobotDrive
 from wpilib import LiveWindow
 from wpilib import PIDController
+from wpilib.interfaces import PIDOutput
 from wpilib import CANTalon
+from wpilib import SmartDashboard
+
 from utils.bno055 import BNO055
 from commands.driveTrainCmds import JoystickDriver
+from visionState import VisionState
 
 import math
 
@@ -41,11 +45,12 @@ class DriveTrain(Subsystem):
     k_ControlModeSpeed=0,
     k_ControlModeVBus=1
 
-    class TurnHelper():
-        """TurnHelper: a private helper class for PIDController-based
+    class _turnHelper(PIDOutput):
+        """a private helper class for PIDController-based
            imu-guided turning.
         """
         def __init__(self, driveTrain):
+            super().__init__()
             self.driveTrain = driveTrain
 
         def pidWrite(self, output):
@@ -105,14 +110,15 @@ class DriveTrain(Subsystem):
 
         # init IMU - used for driver & vision feedback as well as for
         #   some autonomous modes.
+        self.visionState = self.robot.visionState
         self.imu = BNO055()
         self.turnPID = PIDController(self.k_turnKp, self.k_turnKd, self.k_turnKf,
-                                     self.imu, DriveTrain.TurnHelper(self))
+                                     self.imu, DriveTrain._turnHelper(self))
         self.turnPID.setOutputRange(-1, 1)
         self.turnPID.setInputRange(-180, 180)
         self.turnPID.setPercentTolerance(2)
-
-        self.maxSpeed = self.k_defaultDriveSpeed
+        self.turnMultiplier = DriveTrain.k_mediumTurn
+        self.maxSpeed = DriveTrain.k_defaultDriveSpeed
         # self.setContinuous() ?
 
         robot.info("Initialized DriveTrain")
@@ -120,7 +126,7 @@ class DriveTrain(Subsystem):
     def initForCommand(self, controlMode):
         self.leftMasterMotor.setEncPosition(0) # async call
         self.rightMasterMotor.setEncPosition(0)
-        self.robotDrive.StopMotor()
+        self.robotDrive.stopMotor()
         self.robotDrive.setMaxOutput(self.maxSpeed)
         if controlMode == self.k_ControlModeSpeed:
             self.leftMasterMotor.changeControlMode(CANTalon.ControlMode.Speed)
@@ -132,16 +138,24 @@ class DriveTrain(Subsystem):
             self.robot.error("Unexpected control mode")
 
         self.robot.info("driveTrain initDefaultCommand, controlmodes: %d %d" %
-                        self.leftMasterMotor.getControlMode(),
-                        self.rightMasterMotor.getControlMode())
+                        (self.leftMasterMotor.getControlMode(),
+                        self.rightMasterMotor.getControlMode()))
 
     def initDefaultCommand(self):
         # control modes are integers values:
         #   0 percentvbux
         #   1 position
         #   2 velocity
-        self.setDefaultCommand(JoystickDriver(self))
+        self.setDefaultCommand(JoystickDriver(self.robot))
         self.robotDrive.stopMotor();
+
+    def updateDashboard(self):
+        # TODO: additional items?
+        SmartDashboard.putNumber("IMU heading", self.getCurrentHeading())
+        SmartDashboard.putNumber("IMU calibration", self.imu.getCalibration())
+
+    def stop(self):
+        self.robotDrive.stopMotor()
 
     def joystickDrive(self, jsY, jsX, throttle):
         """ joystickDrive - called by JoystickDriver command. Inputs
@@ -153,7 +167,7 @@ class DriveTrain(Subsystem):
             (math.fabs(jx) < 0.075 and math.fabs(jy) < .075):
             # joystick dead zone or auto (where we've been scheduled via
             # default command machinery)
-            self.robotDrive.stop()
+            self.robotDrive.stopMotor()
         else:
             st = self.scaleThrottle(throttle)
             self.robotDrive.arcadeDrive(jsY*self.turnMultiplier, jsX*st)
@@ -164,10 +178,77 @@ class DriveTrain(Subsystem):
         self.robotDrive.drive(outputmag, curve)
 
     def driveStraight(self, speed):
-        pass
+        """driveStraight: invoked from AutoDriveStraight..
+        """
+        # NB: maxOuput isn't applied via set so
+        #  speed is supposedly measured in rpm but this depends on our
+        #  initialization establishing encoding ticks per revolution.
+        #  This is approximate so we rely on the observed values above.
+        #  (DEFAULT_SPEED_MAX_OUTPUT)
+        if 0:
+            self.leftMasterMotor.set(speed)
+            self.rightMasterMotor.set(speed)
+        else:
+            # TODO: validate this codepath
+            moveValue = speed / self.maxSpeed
+            rotateValue = 0
+            self.robotDrive.arcadeDrive(moveValue, rotateValue)
 
-    def stop(self):
-        self.robotdrive.stopMotor(0)
+    def startAutoTurn(self, degrees):
+        self.robot.info("start autoturn from %d to %d" %
+                        (self.getHeading(), degrees))
+        self.turnPID.reset()
+        self.turnPID.setSetpoint(degrees)
+        self.turnPID.enable()
+
+    def endAutoTurn(self):
+        if self.turnPID.isEnabled():
+            self.turnPID.disable()
+
+    def isAutoTurning(self):
+        return self.turnPID.isEnabled()
+
+    def isAutoTurnFinished(self):
+        return self.turnPID.onTarget()
+
+    def turn(self, speed):
+        """turn takes a speed, not an angle...
+        A negative speed is interpretted as turn left.
+        Note that we bypass application of setMaxOutput Which
+        only applies to calls to robotDrive.
+        """
+        # In order to turn left, we want the right wheels to go
+        # forward and left wheels to go backward (cf: tankDrive)
+        # Oddly, our right master motor is reversed, so we compensate here.
+        #  speed < 0:  turn left:  rightmotor(negative) (forward),
+        #                          leftmotor(negative)  (backward)
+        #  speed > 0:  turn right: rightmotor(positive) (backward)
+        #                          leftmotor(positive) (forward)
+        if 0:
+            self.leftMasterMotor.set(speed)
+            self.rightMasterMotor.set(speed)
+        else:
+            # TODO: validate this codepath
+            moveValue = 0
+            rotateValue = speed / self.maxSpeed
+            self.robotDrive.arcadeDrive(moveValue, rotateValue)
+
+    def trackVision(self):
+        """presumed called by either autonomous or teleop commands to
+        allow the vision subsystem to guide the robot
+        """
+        if self.visionState.DriveLockedOnTarget:
+            self.stop()
+        else:
+            if self.isAutoTurning():
+                if self.isAutoTurnFinished():
+                    self.endAutoTurn()
+                    self.visionState.DriveLockedOnTarget = True
+            else:
+                # setup for an auto-turn
+                h = self.getCurrentHeading()
+                tg = self.getTargetHeading(h)
+                self.startAutoTurn(tg)
 
     def getCurrentHeading(self):
         """ getCurrentHeading returns a value between -180 and 180

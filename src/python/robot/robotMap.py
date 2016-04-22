@@ -7,6 +7,7 @@ class RobotMap:
     floating around.
     """
 
+    # CAN devices --------------------------------------------------
     # driveTrain
     k_DtLeftMasterId = 10
     k_DtLeftFollowerId = 11
@@ -18,6 +19,7 @@ class RobotMap:
     k_IlRightMotorId = 14
     k_IlAimMotorId = 16
 
+    # ports are on CAN devices
     k_IlBoulderSwitchPort = 0
     k_IlServoLeftPort = 0
     k_IlServoRightPort = 1
@@ -28,7 +30,7 @@ class RobotMap:
     k_PcBarMotorId = 19
     k_PcSpeed = .6
 
-    # vision
-    k_VsPhotonicCannon = 4
+    # Digital Outputs ---------------------------------------------------
+    k_VsPhotonicCannon = 4  # a DigitalOutput
 
     # NB: no code here!  This is just a central place for wiring decisions.
