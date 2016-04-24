@@ -8,16 +8,19 @@ class RobotMap:
     """
 
     # CAN devices --------------------------------------------------
-    # driveTrain
+    # Dt: driveTrain
+    # Il: intakeLauncher
+    # Pc: portcullis
     k_DtLeftMasterId = 10
     k_DtLeftFollowerId = 11
     k_DtRightMasterId = 12
     k_DtRightFollowerId = 13
-
-    # intake launcher
-    k_IlLeftMotorId = 15
     k_IlRightMotorId = 14
+    k_IlLeftMotorId = 15
     k_IlAimMotorId = 16
+    k_PcLeftMotorId = 17
+    k_PcRightMotorId = 18
+    k_PcBarMotorId = 19
 
     # ports are on CAN devices
     k_IlBoulderSwitchPort = 0
@@ -25,9 +28,6 @@ class RobotMap:
     k_IlServoRightPort = 1
 
     # portcullis
-    k_PcLeftMotorId = 17
-    k_PcRightMotorId = 18
-    k_PcBarMotorId = 19
     k_PcSpeed = .6
 
     # Digital Outputs ---------------------------------------------------

@@ -38,8 +38,8 @@ class JoystickDriver(Command):
     # interrupted: called when another command which requires one or more of the same
     #   subsystems is scheduled to run
     def interrupted(self):
-        self.end()
         self.robot.info("JoystickDriver interrupted")
+        self.end()
 
 class JoystickDriveStraight(Command):
     """DriveStraight: This class is a test of whether the IMU can be relied upon to
@@ -81,6 +81,30 @@ class JoystickDriveStraight(Command):
     def interrupted():
         self.robot.info("JoystickDriveStraight: interrupted")
         self.robot.end()
+
+class AutoNoDrive(Command):
+    def __init__(self, robot):
+        super().__init__()
+        self.robot = robot
+        self.driveTrain = robot.driveTrain
+        self.requires(self.driveTrain)
+
+    def initialize(self):
+        self.robot.info("AutoNoDrive init")
+        self.driveTrain.initForCommand(self.driveTrain.k_ControlModeDisabled)
+
+    def isFinished(self):
+        return False # until canceled
+
+    def execute(self):
+        self.driveTrain.stop()
+
+    def end(self):
+        self.robot.info("AutoNoDrive end")
+
+    def interrupted(self):
+        self.robot.info("AutoNoDrive interrupted")
+        self.end()
 
 class AutoDriveStraight(Command):
     """AutoDriveStraight is the primary means of driving during autonomous.
@@ -133,3 +157,23 @@ class AutoDriveStraight(Command):
         self.robot.info("AutoDriveStraight end")
         self.isDone = True
         self.driveTrain.stop()
+
+class TurnSpeedFast(Command):
+    def __init__(self, robot):
+    	self.driveTrain = robot.driveTrain
+
+    def execute(self):
+        self.driveTrain.modifyTurnSpeed(True)
+
+    def isFinished(self):
+        return True # a one shot
+
+class TurnSpeedSlow(Command):
+    def __init__(self, robot):
+    	self.driveTrain = robot.driveTrain
+
+    def execute(self):
+        self.driveTrain.modifyTurnSpeed(False)
+
+    def isFinished(self):
+        return True # a one shot

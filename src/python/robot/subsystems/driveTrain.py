@@ -42,8 +42,9 @@ class DriveTrain(Subsystem):
     k_turnKd = .3
     k_turnKf = .001
 
-    k_ControlModeSpeed=0,
-    k_ControlModeVBus=1
+    k_ControlModeSpeed = 0
+    k_ControlModeVBus = 1
+    k_ControlModeDisabled = 2
 
     class _turnHelper(PIDOutput):
         """a private helper class for PIDController-based
@@ -134,12 +135,16 @@ class DriveTrain(Subsystem):
         elif controlMode == self.k_ControlModeVBus:
             self.leftMasterMotor.changeControlMode(CANTalon.ControlMode.PercentVbus)
             self.rightMasterMotor.changeControlMode(CANTalon.ControlMode.PercentVbus)
+        elif controlMode == self.k_ControlModeDisabled:
+            # unverified codepath
+            self.leftMasterMotor.disableControl()
+            self.rightMasterMotor.disableControl()
         else:
             self.robot.error("Unexpected control mode")
 
         self.robot.info("driveTrain initDefaultCommand, controlmodes: %d %d" %
                         (self.leftMasterMotor.getControlMode(),
-                        self.rightMasterMotor.getControlMode()))
+                         self.rightMasterMotor.getControlMode()))
 
     def initDefaultCommand(self):
         # control modes are integers values:
@@ -279,6 +284,12 @@ class DriveTrain(Subsystem):
             # Somehow our math was wrong. Our value was too high, so force it to the maximum
             result = 1.0
         return result
+
+    def modifyTurnSpeed(self, speedUp):
+        if speedUp:
+            self.turnMultiplier = self.k_mediumTurn
+        else:
+            self.turnMultiplier = self.k_slowTurn
 
     def inchesToTicks(self, inches):
         return int(self.k_quadTicksPerInch * inches)

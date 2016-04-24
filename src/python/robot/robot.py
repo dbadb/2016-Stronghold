@@ -32,18 +32,34 @@ class AresRobot(IterativeRobot):
         self.autonomousCommand = None
 
         # next initialize subsystems
-        self.debug("init drivetrain")
-        self.driveTrain = DriveTrain(self)
-        self.debug("init portcullis")
-        self.portcullis = Portcullis(self)
-        self.debug("init intake")
-        self.intakeLauncher = IntakeLauncher(self)
+        try:
+            self.info("init drivetrain")
+            self.driveTrain = DriveTrain(self)
+        except:
+            self.error("Problem intializing DriveTrain")
+
+        try:
+            self.info("init portcullis")
+            self.portcullis = Portcullis(self)
+        except:
+            self.error("Problem initializing portcullis")
+
+        try:
+            self.info("init intake")
+            self.intakeLauncher = IntakeLauncher(self)
+        except:
+            self.error("Problem initializing intakelauncher")
+
         self.photonicCannon = DigitalOutput(self.map.k_VsPhotonicCannon)
 
         # last, initialize operator interface
-        self.debug("init OI")
-        self.oi = OI(self)
-        self.debug("init done")
+        try:
+            self.info("init OI")
+            self.oi = OI(self)
+        except:
+            self.error("Problem initializing OI")
+        
+        self.info("init done")
 
     def autonomousInit(self):
         self.info("autonomousInit")
