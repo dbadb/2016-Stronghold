@@ -130,8 +130,8 @@ https://robotpy.github.io/faq/
 https://robotpy.github.io/community/  (13 teams used it during 2016)
 
 
-The Pros and Cons
-=================
+Some Pros and Cons
+==================
 
 Java
 ----
