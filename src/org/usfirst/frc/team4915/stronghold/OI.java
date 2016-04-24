@@ -147,12 +147,12 @@ public class OI {
             initializeButton (this.portcullisBarOut, aimStick, PORTCULLIS_BAR_OUT, new PortcullisBarOut());
             initializeButton (this.portcullisBarStop, aimStick, PORTCULLIS_BAR_STOP, new PortcullisBarStop());
         }
-        
+
         if (ModuleManager.DRIVE_MODULE_ON) {
 	    this.speedToggle = new JoystickButton(driveStick, TURN_SCALER);
 	    this.speedToggle.whileHeld(new ToggleSpeedDown());
 	    this.speedToggle.whenReleased(new ToggleSpeedUp());
-	    
+
 //	    this.driveStraightButton = new JoystickButton(driveStick, DRIVE_STRAIGHT_BUTTON_NUMBER);
 //	    this.driveStraightButton.whileHeld(new DriveStraightCommand());
        }
@@ -171,7 +171,7 @@ public class OI {
 
         if (ModuleManager.VISION_MODULE_ON) {
             SmartDashboard.putData(VisionState.getInstance());
-            
+
             initializeButton(this.highLowButton, aimStick, HIGH_LOW_BUTTON_NUMBER, new AutoAimControlCommand(false, true));
             System.out.println("ModuleManager OI: Initialize Vision!");
         }
